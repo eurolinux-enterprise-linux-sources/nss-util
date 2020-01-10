@@ -4,8 +4,8 @@
 
 Summary:          Network Security Services Utilities Library
 Name:             nss-util
-Version:          3.27.1
-Release:          3%{?dist}
+Version:          3.28.3
+Release:          1%{?dist}
 License:          MPLv2.0
 URL:              http://www.mozilla.org/projects/security/pki/nss/
 Group:            System Environment/Libraries
@@ -198,6 +198,7 @@ done
 # these are marked as public export in nss/lib/util/manifest.mk
 %{_includedir}/nss3/base64.h
 %{_includedir}/nss3/ciferfam.h
+%{_includedir}/nss3/eccutil.h
 %{_includedir}/nss3/hasht.h
 %{_includedir}/nss3/nssb64.h
 %{_includedir}/nss3/nssb64t.h
@@ -234,6 +235,10 @@ done
 %{_includedir}/nss3/templates/templates.c
 
 %changelog
+* Fri Feb 24 2017 Daiki Ueno <dueno@redhat.com> - 3.28.3-1
+- Rebase to NSS 3.28.3
+- Package new header eccutil.h
+
 * Wed Nov 23 2016 Daiki Ueno <dueno@redhat.com> - 3.27.1-3
 - Tolerate policy file without last empty line
 
