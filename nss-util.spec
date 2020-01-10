@@ -1,10 +1,11 @@
-%global nspr_version 4.19.0
+%global nspr_version 4.21.0
 # adjust to the very latest build needed
 %global nspr_build_version -1
+%global nss_util_version 3.44
 
 Summary:          Network Security Services Utilities Library
 Name:             nss-util
-Version:          3.36.0
+Version:          %{nss_util_version}.0
 Release:          1%{?dist}
 License:          MPLv2.0
 URL:              http://www.mozilla.org/projects/security/pki/nss/
@@ -18,7 +19,7 @@ BuildRequires:    gawk
 BuildRequires:    psmisc
 BuildRequires:    perl
 
-Source0:          %{name}-%{version}.tar.gz
+Source0:          %{name}-%{nss_util_version}.tar.gz
 # The nss-util tar ball is a subset of nss-{version}.tar.gz
 # We use the nss-split-util.sh script for keeping only what we need.
 # nss-util is produced via nss-split-util.sh {name}-{version}
@@ -34,15 +35,16 @@ Source2:          nss-util.pc.in
 Source3:          nss-util-config.in
 
 Patch2:           add-relro-linker-option.patch
-# The compiler on ppc/ppc64 builders for RHEL-6 doesn't accept -z as a
-# linker option.  Use -Wl,-z instead.
 Patch3:           nss-util-noexecstack.patch
 Patch5:           hasht-dont-include-prtypes.patch
 Patch7: pkcs1sig-include-prtypes.patch
-Patch9: cve-2016-1950.patch
-# To revert the change in:
+# To revert change in:
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1377940
-Patch10: nss-util-sql-default.patch
+Patch9: nss-util-sql-default.patch
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1546229
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1473806
+Patch10: nss-util-ike-patch.patch
+Patch11: nss-util-fix-public-key-from-priv.patch
 
 %description
 Utilities for Network Security Services and the Softoken module
@@ -62,14 +64,19 @@ Header and library files for doing development with Network Security Services.
 
 
 %prep
-%setup -q
+%setup -q -n %{name}-%{nss_util_version}
 %patch2 -p0 -b .relro
+# The compiler on ppc/ppc64 builders for RHEL-6 doesn't accept -z as a
+# linker option.  Use -Wl,-z instead.
 %patch3 -p0 -b .noexecstack
 %patch5 -p0 -b .prtypes
 %patch7 -p0 -b .include_prtypes
 pushd nss
-%patch10 -p1 -R -b .sql-default
+%patch9 -p1 -R -b .sql-default
+%patch10 -p1 -b .ike_mechs
 popd
+%patch11 -p1 -b .pub_priv_mechs
+
 
 
 %build
@@ -241,6 +248,9 @@ done
 %{_includedir}/nss3/templates/templates.c
 
 %changelog
+* Mon Aug 19 2019 Bob Relyea <rrelyea@redhat.com> - 3.44.0-1
+- Rebase to NSS 3.44.0 for Firefox 68
+
 * Wed Mar  7 2018 Daiki Ueno <dueno@redhat.com> - 3.36.0-1
 - Rebase to NSS 3.36.0
 

@@ -1,0 +1,31 @@
+diff -up ./nss/lib/util/pkcs11n.h.pub_priv_mech ./nss/lib/util/pkcs11n.h
+--- ./nss/lib/util/pkcs11n.h.pub_priv_mech	2019-06-05 09:59:18.446315784 -0700
++++ ./nss/lib/util/pkcs11n.h	2019-06-05 10:15:13.388806330 -0700
+@@ -152,11 +152,6 @@
+ #define CKM_NSS_HKDF_SHA384 (CKM_NSS + 5)
+ #define CKM_NSS_HKDF_SHA512 (CKM_NSS + 6)
+ 
+-/* IKE mechanism (to be proposed to PKCS #11 */
+-#define CKM_NSS_IKE_PRF_PLUS_DERIVE (CKM_NSS + 7)
+-#define CKM_NSS_IKE_PRF_DERIVE (CKM_NSS + 8)
+-#define CKM_NSS_IKE1_PRF_DERIVE (CKM_NSS + 9)
+-#define CKM_NSS_IKE1_APP_B_PRF_DERIVE (CKM_NSS + 10)
+ 
+ /* J-PAKE round 1 key generation mechanisms.
+  *
+@@ -238,6 +233,15 @@
+ 
+ #define CKM_NSS_CHACHA20_CTR (CKM_NSS + 33)
+ 
++/* IKE mechanism (to be proposed to PKCS #11 */
++#define CKM_NSS_IKE_PRF_PLUS_DERIVE (CKM_NSS + 34)
++#define CKM_NSS_IKE_PRF_DERIVE (CKM_NSS + 35)
++#define CKM_NSS_IKE1_PRF_DERIVE (CKM_NSS + 36)
++#define CKM_NSS_IKE1_APP_B_PRF_DERIVE (CKM_NSS + 37)
++
++/* Derive a public key from a bare private key */
++#define CKM_NSS_PUB_FROM_PRIV (CKM_NSS + 40)
++
+ /*
+  * HISTORICAL:
+  * Do not attempt to use these. They are only used by NETSCAPE's internal
