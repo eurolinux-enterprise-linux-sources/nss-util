@@ -12,10 +12,13 @@ apt-get install -y --no-install-recommends apt-utils
 apt_packages=()
 apt_packages+=('build-essential')
 apt_packages+=('ca-certificates')
+apt_packages+=('clang-5.0')
 apt_packages+=('curl')
 apt_packages+=('npm')
 apt_packages+=('git')
 apt_packages+=('golang-1.6')
+apt_packages+=('libxml2-utils')
+apt_packages+=('locales')
 apt_packages+=('ninja-build')
 apt_packages+=('pkg-config')
 apt_packages+=('zlib1g-dev')
@@ -45,11 +48,20 @@ echo "deb http://ppa.launchpad.net/ubuntu-toolchain-r/test/ubuntu xenial main" >
 apt-get -y update
 apt-get install -y --no-install-recommends ${apt_packages[@]}
 
-# 32-bit builds
-ln -s /usr/include/x86_64-linux-gnu/zconf.h /usr/include
+# Latest version of abigail-tools
+apt-get install -y libxml2-dev autoconf libelf-dev libdw-dev libtool
+git clone git://sourceware.org/git/libabigail.git
+cd ./libabigail
+autoreconf -fi
+./configure --prefix=/usr --disable-static --disable-apidoc --disable-manual
+make
+make install
+cd ..
+apt-get remove -y libxml2-dev autoconf libtool
+rm -rf libabigail
 
-# Install clang-3.9 into /usr/local/.
-curl -L http://llvm.org/releases/3.9.0/clang+llvm-3.9.0-x86_64-linux-gnu-ubuntu-16.04.tar.xz | tar xJv -C /usr/local --strip-components=1
+# Install latest Rust (stable).
+su worker -c "curl https://sh.rustup.rs -sSf | sh -s -- -y"
 
 locale-gen en_US.UTF-8
 dpkg-reconfigure locales

@@ -1,10 +1,10 @@
-%global nspr_version 4.13.0
+%global nspr_version 4.19.0
 # adjust to the very latest build needed
 %global nspr_build_version -1
 
 Summary:          Network Security Services Utilities Library
 Name:             nss-util
-Version:          3.28.4
+Version:          3.36.0
 Release:          1%{?dist}
 License:          MPLv2.0
 URL:              http://www.mozilla.org/projects/security/pki/nss/
@@ -34,11 +34,15 @@ Source2:          nss-util.pc.in
 Source3:          nss-util-config.in
 
 Patch2:           add-relro-linker-option.patch
+# The compiler on ppc/ppc64 builders for RHEL-6 doesn't accept -z as a
+# linker option.  Use -Wl,-z instead.
+Patch3:           nss-util-noexecstack.patch
 Patch5:           hasht-dont-include-prtypes.patch
 Patch7: pkcs1sig-include-prtypes.patch
 Patch9: cve-2016-1950.patch
-# Patch to make the policy file parser tolerate about missing empty line
-Patch10: nss-util-policy-double-newline.patch
+# To revert the change in:
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1377940
+Patch10: nss-util-sql-default.patch
 
 %description
 Utilities for Network Security Services and the Softoken module
@@ -60,10 +64,11 @@ Header and library files for doing development with Network Security Services.
 %prep
 %setup -q
 %patch2 -p0 -b .relro
+%patch3 -p0 -b .noexecstack
 %patch5 -p0 -b .prtypes
 %patch7 -p0 -b .include_prtypes
 pushd nss
-%patch10 -p1 -b .policy_double_newline
+%patch10 -p1 -R -b .sql-default
 popd
 
 
@@ -214,6 +219,7 @@ done
 %{_includedir}/nss3/pkcs11p.h
 %{_includedir}/nss3/pkcs11t.h
 %{_includedir}/nss3/pkcs11u.h
+%{_includedir}/nss3/pkcs11uri.h
 %{_includedir}/nss3/pkcs1sig.h
 %{_includedir}/nss3/portreg.h
 %{_includedir}/nss3/secasn1.h
@@ -235,6 +241,15 @@ done
 %{_includedir}/nss3/templates/templates.c
 
 %changelog
+* Wed Mar  7 2018 Daiki Ueno <dueno@redhat.com> - 3.36.0-1
+- Rebase to NSS 3.36.0
+
+* Wed Feb 28 2018 Daiki Ueno <dueno@redhat.com> - 3.36.0-0.1.beta
+- Rebase to NSS 3.36 BETA
+
+* Mon Dec  4 2017 Daiki Ueno <dueno@redhat.com> - 3.34.0-1
+- Rebase to NSS 3.34.0
+
 * Fri Apr  7 2017 Daiki Ueno <dueno@redhat.com> - 3.28.4-1
 - Rebase to NSS 3.28.4 to accommodate base64 encoding fix
 

@@ -48,28 +48,18 @@ TEST_P(TlsConnectGenericPre13, ConnectStaticRSA) {
 // This test is stream so we can catch the bad_record_mac alert.
 TEST_P(TlsConnectStreamPre13, ConnectStaticRSABogusCKE) {
   EnableOnlyStaticRsaCiphers();
-  TlsInspectorReplaceHandshakeMessage* i1 =
-      new TlsInspectorReplaceHandshakeMessage(
-          kTlsHandshakeClientKeyExchange,
-          DataBuffer(kBogusClientKeyExchange, sizeof(kBogusClientKeyExchange)));
-  client_->SetPacketFilter(i1);
-  auto alert_recorder = new TlsAlertRecorder();
-  server_->SetPacketFilter(alert_recorder);
-  ConnectExpectFail();
-  EXPECT_EQ(kTlsAlertFatal, alert_recorder->level());
-  EXPECT_EQ(kTlsAlertBadRecordMac, alert_recorder->description());
+  MakeTlsFilter<TlsInspectorReplaceHandshakeMessage>(
+      client_, kTlsHandshakeClientKeyExchange,
+      DataBuffer(kBogusClientKeyExchange, sizeof(kBogusClientKeyExchange)));
+  ConnectExpectAlert(server_, kTlsAlertBadRecordMac);
 }
 
 // Test that a PMS with a bogus version number is handled correctly.
 // This test is stream so we can catch the bad_record_mac alert.
 TEST_P(TlsConnectStreamPre13, ConnectStaticRSABogusPMSVersionDetect) {
   EnableOnlyStaticRsaCiphers();
-  client_->SetPacketFilter(new TlsInspectorClientHelloVersionChanger(server_));
-  auto alert_recorder = new TlsAlertRecorder();
-  server_->SetPacketFilter(alert_recorder);
-  ConnectExpectFail();
-  EXPECT_EQ(kTlsAlertFatal, alert_recorder->level());
-  EXPECT_EQ(kTlsAlertBadRecordMac, alert_recorder->description());
+  MakeTlsFilter<TlsClientHelloVersionChanger>(client_, server_);
+  ConnectExpectAlert(server_, kTlsAlertBadRecordMac);
 }
 
 // Test that a PMS with a bogus version number is ignored when
@@ -77,8 +67,8 @@ TEST_P(TlsConnectStreamPre13, ConnectStaticRSABogusPMSVersionDetect) {
 // ConnectStaticRSABogusPMSVersionDetect.
 TEST_P(TlsConnectGenericPre13, ConnectStaticRSABogusPMSVersionIgnore) {
   EnableOnlyStaticRsaCiphers();
-  client_->SetPacketFilter(new TlsInspectorClientHelloVersionChanger(server_));
-  server_->DisableRollbackDetection();
+  MakeTlsFilter<TlsClientHelloVersionChanger>(client_, server_);
+  server_->SetOption(SSL_ROLLBACK_DETECTION, PR_FALSE);
   Connect();
 }
 
@@ -86,16 +76,10 @@ TEST_P(TlsConnectGenericPre13, ConnectStaticRSABogusPMSVersionIgnore) {
 TEST_P(TlsConnectStreamPre13, ConnectExtendedMasterSecretStaticRSABogusCKE) {
   EnableOnlyStaticRsaCiphers();
   EnableExtendedMasterSecret();
-  TlsInspectorReplaceHandshakeMessage* inspect =
-      new TlsInspectorReplaceHandshakeMessage(
-          kTlsHandshakeClientKeyExchange,
-          DataBuffer(kBogusClientKeyExchange, sizeof(kBogusClientKeyExchange)));
-  client_->SetPacketFilter(inspect);
-  auto alert_recorder = new TlsAlertRecorder();
-  server_->SetPacketFilter(alert_recorder);
-  ConnectExpectFail();
-  EXPECT_EQ(kTlsAlertFatal, alert_recorder->level());
-  EXPECT_EQ(kTlsAlertBadRecordMac, alert_recorder->description());
+  MakeTlsFilter<TlsInspectorReplaceHandshakeMessage>(
+      client_, kTlsHandshakeClientKeyExchange,
+      DataBuffer(kBogusClientKeyExchange, sizeof(kBogusClientKeyExchange)));
+  ConnectExpectAlert(server_, kTlsAlertBadRecordMac);
 }
 
 // This test is stream so we can catch the bad_record_mac alert.
@@ -103,21 +87,17 @@ TEST_P(TlsConnectStreamPre13,
        ConnectExtendedMasterSecretStaticRSABogusPMSVersionDetect) {
   EnableOnlyStaticRsaCiphers();
   EnableExtendedMasterSecret();
-  client_->SetPacketFilter(new TlsInspectorClientHelloVersionChanger(server_));
-  auto alert_recorder = new TlsAlertRecorder();
-  server_->SetPacketFilter(alert_recorder);
-  ConnectExpectFail();
-  EXPECT_EQ(kTlsAlertFatal, alert_recorder->level());
-  EXPECT_EQ(kTlsAlertBadRecordMac, alert_recorder->description());
+  MakeTlsFilter<TlsClientHelloVersionChanger>(client_, server_);
+  ConnectExpectAlert(server_, kTlsAlertBadRecordMac);
 }
 
 TEST_P(TlsConnectStreamPre13,
        ConnectExtendedMasterSecretStaticRSABogusPMSVersionIgnore) {
   EnableOnlyStaticRsaCiphers();
   EnableExtendedMasterSecret();
-  client_->SetPacketFilter(new TlsInspectorClientHelloVersionChanger(server_));
-  server_->DisableRollbackDetection();
+  MakeTlsFilter<TlsClientHelloVersionChanger>(client_, server_);
+  server_->SetOption(SSL_ROLLBACK_DETECTION, PR_FALSE);
   Connect();
 }
 
-}  // namespace nspr_test
+}  // namespace nss_test

@@ -31,7 +31,7 @@ const static uint8_t kCannedTls13ClientHello[] = {
     0x00, 0x00, 0xa0, 0x00, 0x00, 0x00, 0x0b, 0x00, 0x09, 0x00, 0x00, 0x06,
     0x73, 0x65, 0x72, 0x76, 0x65, 0x72, 0xff, 0x01, 0x00, 0x01, 0x00, 0x00,
     0x0a, 0x00, 0x12, 0x00, 0x10, 0x00, 0x17, 0x00, 0x18, 0x00, 0x19, 0x01,
-    0x00, 0x01, 0x01, 0x01, 0x02, 0x01, 0x03, 0x01, 0x04, 0x00, 0x28, 0x00,
+    0x00, 0x01, 0x01, 0x01, 0x02, 0x01, 0x03, 0x01, 0x04, 0x00, 0x33, 0x00,
     0x47, 0x00, 0x45, 0x00, 0x17, 0x00, 0x41, 0x04, 0x86, 0x4a, 0xb9, 0xdc,
     0x6a, 0x38, 0xa7, 0xce, 0xe7, 0xc2, 0x4f, 0xa6, 0x28, 0xb9, 0xdc, 0x65,
     0xbf, 0x73, 0x47, 0x3c, 0x9c, 0x65, 0x8c, 0x47, 0x6d, 0x57, 0x22, 0x8a,
@@ -44,18 +44,20 @@ const static uint8_t kCannedTls13ClientHello[] = {
     0x02, 0x05, 0x02, 0x06, 0x02, 0x02, 0x02};
 
 const static uint8_t kCannedTls13ServerHello[] = {
-    0x7f, kD13, 0x9c, 0xbc, 0x14, 0x9b, 0x0e, 0x2e, 0xfa, 0x0d, 0xf3, 0xf0,
-    0x5c, 0x70, 0x7a, 0xe0, 0xd1, 0x9b, 0x3e, 0x5a, 0x44, 0x6b, 0xdf, 0xe5,
-    0xc2, 0x28, 0x64, 0xf7, 0x00, 0xc1, 0x9c, 0x08, 0x76, 0x08, 0x13, 0x01,
-    0x00, 0x28, 0x00, 0x28, 0x00, 0x24, 0x00, 0x1d, 0x00, 0x20, 0xc2, 0xcf,
-    0x23, 0x17, 0x64, 0x23, 0x03, 0xf0, 0xfb, 0x45, 0x98, 0x26, 0xd1, 0x65,
-    0x24, 0xa1, 0x6c, 0xa9, 0x80, 0x8f, 0x2c, 0xac, 0x0a, 0xea, 0x53, 0x3a,
-    0xcb, 0xe3, 0x08, 0x84, 0xae, 0x19};
+    0x03, 0x03, 0x9c, 0xbc, 0x14, 0x9b, 0x0e, 0x2e, 0xfa, 0x0d, 0xf3,
+    0xf0, 0x5c, 0x70, 0x7a, 0xe0, 0xd1, 0x9b, 0x3e, 0x5a, 0x44, 0x6b,
+    0xdf, 0xe5, 0xc2, 0x28, 0x64, 0xf7, 0x00, 0xc1, 0x9c, 0x08, 0x76,
+    0x08, 0x00, 0x13, 0x01, 0x00, 0x00, 0x2e, 0x00, 0x33, 0x00, 0x24,
+    0x00, 0x1d, 0x00, 0x20, 0xc2, 0xcf, 0x23, 0x17, 0x64, 0x23, 0x03,
+    0xf0, 0xfb, 0x45, 0x98, 0x26, 0xd1, 0x65, 0x24, 0xa1, 0x6c, 0xa9,
+    0x80, 0x8f, 0x2c, 0xac, 0x0a, 0xea, 0x53, 0x3a, 0xcb, 0xe3, 0x08,
+    0x84, 0xae, 0x19, 0x00, 0x2b, 0x00, 0x02, 0x7f, kD13};
 static const char *k0RttData = "ABCDEF";
 
 TEST_P(TlsAgentTest, EarlyFinished) {
   DataBuffer buffer;
   MakeTrivialHandshakeRecord(kTlsHandshakeFinished, 0, &buffer);
+  ExpectAlert(kTlsAlertUnexpectedMessage);
   ProcessMessage(buffer, TlsAgent::STATE_ERROR,
                  SSL_ERROR_RX_UNEXPECTED_FINISHED);
 }
@@ -63,15 +65,14 @@ TEST_P(TlsAgentTest, EarlyFinished) {
 TEST_P(TlsAgentTest, EarlyCertificateVerify) {
   DataBuffer buffer;
   MakeTrivialHandshakeRecord(kTlsHandshakeCertificateVerify, 0, &buffer);
+  ExpectAlert(kTlsAlertUnexpectedMessage);
   ProcessMessage(buffer, TlsAgent::STATE_ERROR,
                  SSL_ERROR_RX_UNEXPECTED_CERT_VERIFY);
 }
 
-TEST_P(TlsAgentTestClient, CannedHello) {
+TEST_P(TlsAgentTestClient13, CannedHello) {
   DataBuffer buffer;
   EnsureInit();
-  agent_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_3,
-                          SSL_LIBRARY_VERSION_TLS_1_3);
   DataBuffer server_hello;
   MakeHandshakeMessage(kTlsHandshakeServerHello, kCannedTls13ServerHello,
                        sizeof(kCannedTls13ServerHello), &server_hello);
@@ -80,7 +81,7 @@ TEST_P(TlsAgentTestClient, CannedHello) {
   ProcessMessage(buffer, TlsAgent::STATE_CONNECTING);
 }
 
-TEST_P(TlsAgentTestClient, EncryptedExtensionsInClear) {
+TEST_P(TlsAgentTestClient13, EncryptedExtensionsInClear) {
   DataBuffer server_hello;
   MakeHandshakeMessage(kTlsHandshakeServerHello, kCannedTls13ServerHello,
                        sizeof(kCannedTls13ServerHello), &server_hello);
@@ -92,8 +93,7 @@ TEST_P(TlsAgentTestClient, EncryptedExtensionsInClear) {
   MakeRecord(kTlsHandshakeType, SSL_LIBRARY_VERSION_TLS_1_3,
              server_hello.data(), server_hello.len(), &buffer);
   EnsureInit();
-  agent_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_3,
-                          SSL_LIBRARY_VERSION_TLS_1_3);
+  ExpectAlert(kTlsAlertUnexpectedMessage);
   ProcessMessage(buffer, TlsAgent::STATE_ERROR,
                  SSL_ERROR_RX_UNEXPECTED_HANDSHAKE);
 }
@@ -118,6 +118,7 @@ TEST_F(TlsAgentStreamTestClient, EncryptedExtensionsInClearTwoPieces) {
   agent_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_3,
                           SSL_LIBRARY_VERSION_TLS_1_3);
   ProcessMessage(buffer, TlsAgent::STATE_CONNECTING);
+  ExpectAlert(kTlsAlertUnexpectedMessage);
   ProcessMessage(buffer2, TlsAgent::STATE_ERROR,
                  SSL_ERROR_RX_UNEXPECTED_HANDSHAKE);
 }
@@ -148,6 +149,7 @@ TEST_F(TlsAgentDgramTestClient, EncryptedExtensionsInClearTwoPieces) {
   agent_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_3,
                           SSL_LIBRARY_VERSION_TLS_1_3);
   ProcessMessage(buffer, TlsAgent::STATE_CONNECTING);
+  ExpectAlert(kTlsAlertUnexpectedMessage);
   ProcessMessage(buffer2, TlsAgent::STATE_ERROR,
                  SSL_ERROR_RX_UNEXPECTED_HANDSHAKE);
 }
@@ -159,8 +161,7 @@ TEST_F(TlsAgentStreamTestClient, Set0RttOptionThenWrite) {
   agent_->StartConnect();
   agent_->Set0RttEnabled(true);
   auto filter =
-      new TlsInspectorRecordHandshakeMessage(kTlsHandshakeClientHello);
-  agent_->SetPacketFilter(filter);
+      MakeTlsFilter<TlsHandshakeRecorder>(agent_, kTlsHandshakeClientHello);
   PRInt32 rv = PR_Write(agent_->ssl_fd(), k0RttData, strlen(k0RttData));
   EXPECT_EQ(-1, rv);
   int32_t err = PORT_GetError();
@@ -178,6 +179,7 @@ TEST_F(TlsAgentStreamTestClient, Set0RttOptionThenRead) {
   MakeRecord(kTlsApplicationDataType, SSL_LIBRARY_VERSION_TLS_1_3,
              reinterpret_cast<const uint8_t *>(k0RttData), strlen(k0RttData),
              &buffer);
+  ExpectAlert(kTlsAlertUnexpectedMessage);
   ProcessMessage(buffer, TlsAgent::STATE_ERROR,
                  SSL_ERROR_RX_UNEXPECTED_APPLICATION_DATA);
 }
@@ -198,13 +200,19 @@ TEST_F(TlsAgentStreamTestServer, Set0RttOptionClientHelloThenRead) {
   MakeRecord(kTlsApplicationDataType, SSL_LIBRARY_VERSION_TLS_1_3,
              reinterpret_cast<const uint8_t *>(k0RttData), strlen(k0RttData),
              &buffer);
+  ExpectAlert(kTlsAlertBadRecordMac);
   ProcessMessage(buffer, TlsAgent::STATE_ERROR, SSL_ERROR_BAD_MAC_READ);
 }
 
 INSTANTIATE_TEST_CASE_P(
     AgentTests, TlsAgentTest,
     ::testing::Combine(TlsAgentTestBase::kTlsRolesAll,
-                       TlsConnectTestBase::kTlsModesStream));
+                       TlsConnectTestBase::kTlsVariantsStream,
+                       TlsConnectTestBase::kTlsVAll));
 INSTANTIATE_TEST_CASE_P(ClientTests, TlsAgentTestClient,
-                        TlsConnectTestBase::kTlsModesAll);
+                        ::testing::Combine(TlsConnectTestBase::kTlsVariantsAll,
+                                           TlsConnectTestBase::kTlsVAll));
+INSTANTIATE_TEST_CASE_P(ClientTests13, TlsAgentTestClient13,
+                        ::testing::Combine(TlsConnectTestBase::kTlsVariantsAll,
+                                           TlsConnectTestBase::kTlsV13));
 }  // namespace nss_test

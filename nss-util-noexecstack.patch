@@ -1,0 +1,12 @@
+diff -up nss/coreconf/Linux.mk.noexecstack nss/coreconf/Linux.mk
+--- nss/coreconf/Linux.mk.noexecstack	2017-12-04 13:35:07.497872959 +0100
++++ nss/coreconf/Linux.mk	2017-12-04 13:35:15.267696202 +0100
+@@ -148,7 +148,7 @@ DSO_LDOPTS		= -shared $(ARCHFLAG) -Wl,--
+ # against the libsanitizer runtime built into the main executable.
+ ZDEFS_FLAG		= -Wl,-z,defs
+ DSO_LDOPTS		+= $(if $(findstring 2.11.90.0.8,$(shell ld -v)),,$(ZDEFS_FLAG))
+-LDFLAGS			+= $(ARCHFLAG) -z noexecstack
++LDFLAGS			+= $(ARCHFLAG) -Wl,-z,noexecstack
+ 
+ # On Maemo, we need to use the -rpath-link flag for even the standard system
+ # library directories.
