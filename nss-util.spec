@@ -4,7 +4,7 @@
 
 Summary:          Network Security Services Utilities Library
 Name:             nss-util
-Version:          3.28.3
+Version:          3.28.4
 Release:          1%{?dist}
 License:          MPLv2.0
 URL:              http://www.mozilla.org/projects/security/pki/nss/
@@ -18,8 +18,8 @@ BuildRequires:    gawk
 BuildRequires:    psmisc
 BuildRequires:    perl
 
-Source0:          %{name}-%{version}.tar.bz2
-# The nss-util tar ball is a subset of nss-{version}.tar.bz2
+Source0:          %{name}-%{version}.tar.gz
+# The nss-util tar ball is a subset of nss-{version}.tar.gz
 # We use the nss-split-util.sh script for keeping only what we need.
 # nss-util is produced via nss-split-util.sh {name}-{version}
 # Detailed Steps:
@@ -27,7 +27,7 @@ Source0:          %{name}-%{version}.tar.bz2
 # cd nss-util
 # Make the source tarball for nss-util out of the nss one:
 # sh ./nss-split-util.sh ${version}
-# A file named ${name}-${version}.tar.bz2 should appear
+# A file named ${name}-${version}.tar.gz should appear
 # ready to upload to the lookaside cache.
 Source1:          nss-split-util.sh
 Source2:          nss-util.pc.in
@@ -235,6 +235,9 @@ done
 %{_includedir}/nss3/templates/templates.c
 
 %changelog
+* Fri Apr  7 2017 Daiki Ueno <dueno@redhat.com> - 3.28.4-1
+- Rebase to NSS 3.28.4 to accommodate base64 encoding fix
+
 * Fri Feb 24 2017 Daiki Ueno <dueno@redhat.com> - 3.28.3-1
 - Rebase to NSS 3.28.3
 - Package new header eccutil.h
