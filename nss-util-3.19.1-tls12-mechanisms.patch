@@ -1,0 +1,14 @@
+diff -up ./nss/lib/util/pkcs11t.h.tls12_mechs ./nss/lib/util/pkcs11t.h
+--- ./nss/lib/util/pkcs11t.h.tls12_mechs	2017-01-13 16:33:12.199107708 +0100
++++ ./nss/lib/util/pkcs11t.h	2017-01-13 16:34:12.479625017 +0100
+@@ -1650,6 +1650,10 @@ typedef struct CK_TLS_MAC_PARAMS {
+ 
+ typedef CK_TLS_MAC_PARAMS CK_PTR CK_TLS_MAC_PARAMS_PTR;
+ 
++/* aliases for compatibility with prior release */
++#define CK_TLS12_MAC_PARAMS CK_TLS_MAC_PARAMS
++#define CK_TLS12_MAC_PARAMS_PTR CK_TLS_MAC_PARAMS_PTR
++
+ /* WTLS is new for version 2.20 */
+ typedef struct CK_WTLS_RANDOM_DATA {
+     CK_BYTE_PTR pClientRandom;
