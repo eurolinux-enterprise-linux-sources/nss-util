@@ -14,7 +14,7 @@ rpm.define(string.format("nss_util_archive_version %s",
 Summary:          Network Security Services Utilities Library
 Name:             nss-util
 Version:          %{nss_util_version}
-Release:          3%{?dist}
+Release:          4%{?dist}
 License:          MPLv2.0
 URL:              http://www.mozilla.org/projects/security/pki/nss/
 Group:            System Environment/Libraries
@@ -55,6 +55,9 @@ Patch9: nss-util-sql-default.patch
 Patch10: nss-util-ike-patch.patch
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1473806
 Patch11: nss-util-fix-public-key-from-priv.patch
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1515342
+Patch12: nss-util-3.44-handle-malformed-ecdh.patch
+
 
 %description
 Utilities for Network Security Services and the Softoken module
@@ -83,6 +86,9 @@ pushd nss
 %patch10 -p1 -b .ike_mechs
 popd
 %patch11 -p1 -b .pub_priv_mechs
+pushd nss
+%patch12 -p1 -b .handle-malformed-ecdh
+popd
 
 
 %build
@@ -255,6 +261,9 @@ done
 %{_includedir}/nss3/templates/templates.c
 
 %changelog
+* Thu Dec 5 2019 Bob Relyea <rrelyea@redhat.com> - 3.44.0-4
+- Fix segfault on empty or malformed ecdh keys (#1777712)
+
 * Wed Jun 5 2019 Bob Relyea <rrelyea@redhat.com> - 3.44.0-3
 - Add pub from priv mechanism
 - ike mechanisms should not overlap with JPAKE
