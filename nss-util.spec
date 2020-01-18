@@ -1,11 +1,11 @@
-%global nspr_version 4.17.0
+%global nspr_version 4.19.0
 # adjust to the very latest build needed
 %global nspr_build_version -1
 
 Summary:          Network Security Services Utilities Library
 Name:             nss-util
-Version:          3.34.0
-Release:          2%{?dist}
+Version:          3.36.0
+Release:          1.1%{?dist}
 License:          MPLv2.0
 URL:              http://www.mozilla.org/projects/security/pki/nss/
 Group:            System Environment/Libraries
@@ -39,8 +39,11 @@ Patch7: pkcs1sig-include-prtypes.patch
 # Upstream: https://bugzilla.mozilla.org/show_bug.cgi?id=951455
 # Upstream: https://bugzilla.mozilla.org/show_bug.cgi?id=923089
 Patch8: nss-util-3.19.1-tls12-mechanisms.patch
-# Upstream: https://bugzilla.mozilla.org/show_bug.cgi?id=1312142
-Patch9: nss-util-ecc-defaults.patch
+# To revert the change in:
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1377940
+Patch9: nss-util-sql-default.patch
+# revert when rebase to 3.40
+Patch10: nss-util-3.36-ipsec_cert_vfy.patch
 
 %description
 Utilities for Network Security Services and the Softoken module
@@ -65,7 +68,8 @@ Header and library files for doing development with Network Security Services.
 %patch7 -p0 -b .include_prtypes
 %patch8 -p1 -b .tls12_mechs
 pushd nss
-%patch9 -p1 -b .ecc_defaults
+%patch9 -p1 -R -b .sql-default
+%patch10 -p1 -b .ipsec_vfy
 popd
 
 
@@ -239,6 +243,15 @@ done
 %{_includedir}/nss3/templates/templates.c
 
 %changelog
+* Mon Nov 12 2018 Bob Relyea <rrelyea@redhat.com> - 3.36.0-1.1
+- Update the cert verify code to allow a new ipsec usage and follow RFC 4945
+
+* Mon Mar  5 2018 Daiki Ueno <dueno@redhat.com> - 3.36.0-1
+- Rebase to NSS 3.36
+
+* Thu Mar  1 2018 Daiki Ueno <dueno@redhat.com> - 3.36.0-0.1.beta
+- Rebase to NSS 3.36 BETA
+
 * Tue Jan 16 2018 Daiki Ueno <dueno@redhat.com> - 3.34.0-2
 - Recognize "ECC" flag in slotFlags
 

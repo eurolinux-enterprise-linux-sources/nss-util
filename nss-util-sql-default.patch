@@ -1,0 +1,25 @@
+# HG changeset patch
+# User Kai Engert <kaie@kuix.de>
+# Date 1511548994 -3600
+#      Fri Nov 24 19:43:14 2017 +0100
+# Node ID b0658ed367633e505d38c0c0f63b801ddbbb21a4
+# Parent  807662e6ba57db5be05036511ac8634466ed473f
+Bug 1377940, Change NSS default storage file format (currently DBM), when no prefix is given, to SQL, r=rrelyea, r=fkiefer
+
+diff --git a/lib/util/utilpars.c b/lib/util/utilpars.c
+--- a/lib/util/utilpars.c
++++ b/lib/util/utilpars.c
+@@ -1110,12 +1110,8 @@ const char *
+     NSSDBType dbType;
+     PRBool checkEnvDefaultDB = PR_FALSE;
+     *appName = NULL;
+-/* force the default */
+-#ifdef NSS_DISABLE_DBM
++    /* force the default */
+     dbType = NSS_DB_TYPE_SQL;
+-#else
+-    dbType = NSS_DB_TYPE_LEGACY;
+-#endif
+     if (configdir == NULL) {
+         checkEnvDefaultDB = PR_TRUE;
+     } else if (PORT_Strncmp(configdir, MULTIACCESS, sizeof(MULTIACCESS) - 1) == 0) {
