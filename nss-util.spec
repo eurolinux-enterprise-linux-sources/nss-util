@@ -1,11 +1,20 @@
-%global nspr_version 4.19.0
+%global nspr_version 4.21.0
 # adjust to the very latest build needed
 %global nspr_build_version -1
+%global nss_util_version 3.44.0
+
+# The upstream omits the trailing ".0", while we need it for
+# consistency with the pkg-config version:
+# https://bugzilla.redhat.com/show_bug.cgi?id=1578106
+%{lua:
+rpm.define(string.format("nss_util_archive_version %s",
+           string.gsub(rpm.expand("%nss_util_version"), "(.*)%.0$", "%1")))
+}
 
 Summary:          Network Security Services Utilities Library
 Name:             nss-util
-Version:          3.36.0
-Release:          1%{?dist}
+Version:          %{nss_util_version}
+Release:          3%{?dist}
 License:          MPLv2.0
 URL:              http://www.mozilla.org/projects/security/pki/nss/
 Group:            System Environment/Libraries
@@ -18,7 +27,7 @@ BuildRequires:    gawk
 BuildRequires:    psmisc
 BuildRequires:    perl
 
-Source0:          %{name}-%{version}.tar.gz
+Source0:          %{name}-%{nss_util_archive_version}.tar.gz
 # The nss-util tar ball is a subset of nss-{version}.tar.gz.
 # We use the nss-split-util.sh script for keeping only what we need
 # nss-util is produced via via nss-split-util.sh {version}
@@ -42,6 +51,10 @@ Patch8: nss-util-3.19.1-tls12-mechanisms.patch
 # To revert the change in:
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1377940
 Patch9: nss-util-sql-default.patch
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1546229
+Patch10: nss-util-ike-patch.patch
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1473806
+Patch11: nss-util-fix-public-key-from-priv.patch
 
 %description
 Utilities for Network Security Services and the Softoken module
@@ -61,13 +74,15 @@ Header and library files for doing development with Network Security Services.
 
 
 %prep
-%setup -q
+%setup -q -n %{name}-%{nss_util_archive_version}
 %patch2 -p0 -b .prtypes
 %patch7 -p0 -b .include_prtypes
 %patch8 -p1 -b .tls12_mechs
 pushd nss
 %patch9 -p1 -R -b .sql-default
+%patch10 -p1 -b .ike_mechs
 popd
+%patch11 -p1 -b .pub_priv_mechs
 
 
 %build
@@ -240,6 +255,22 @@ done
 %{_includedir}/nss3/templates/templates.c
 
 %changelog
+* Wed Jun 5 2019 Bob Relyea <rrelyea@redhat.com> - 3.44.0-3
+- Add pub from priv mechanism
+- ike mechanisms should not overlap with JPAKE
+
+* Wed May 22 2019 Bob Relyea <rrelyea@redhat.com> - 3.44.0-2
+- Add ike mechanisms
+
+* Wed May 15 2019 Daiki Ueno <dueno@redhat.com> - 3.44.0-1
+- Rebase to NSS 3.44
+
+* Thu Mar 21 2019 Daiki Ueno <dueno@redhat.com> - 3.43.0-1
+- Rebase to NSS 3.43
+
+* Mon Nov 12 2018 Bob Relyea <rrelyea@redhat.com> - 3.36.0-2
+- Update the cert verify code to allow a new ipsec usage and follow RFC 4945
+
 * Mon Mar  5 2018 Daiki Ueno <dueno@redhat.com> - 3.36.0-1
 - Rebase to NSS 3.36
 

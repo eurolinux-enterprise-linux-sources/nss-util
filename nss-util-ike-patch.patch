@@ -1,0 +1,131 @@
+diff --git a/lib/util/pkcs11n.h b/lib/util/pkcs11n.h
+--- a/lib/util/pkcs11n.h
++++ b/lib/util/pkcs11n.h
+@@ -147,16 +147,22 @@
+ #define CKM_NSS_AES_KEY_WRAP_PAD (CKM_NSS + 2)
+ 
+ /* HKDF key derivation mechanisms. See CK_NSS_HKDFParams for documentation. */
+ #define CKM_NSS_HKDF_SHA1 (CKM_NSS + 3)
+ #define CKM_NSS_HKDF_SHA256 (CKM_NSS + 4)
+ #define CKM_NSS_HKDF_SHA384 (CKM_NSS + 5)
+ #define CKM_NSS_HKDF_SHA512 (CKM_NSS + 6)
+ 
++/* IKE mechanism (to be proposed to PKCS #11 */
++#define CKM_NSS_IKE_PRF_PLUS_DERIVE (CKM_NSS + 7)
++#define CKM_NSS_IKE_PRF_DERIVE (CKM_NSS + 8)
++#define CKM_NSS_IKE1_PRF_DERIVE (CKM_NSS + 9)
++#define CKM_NSS_IKE1_APP_B_PRF_DERIVE (CKM_NSS + 10)
++
+ /* J-PAKE round 1 key generation mechanisms.
+  *
+  * Required template attributes: CKA_PRIME, CKA_SUBPRIME, CKA_BASE,
+  *                               CKA_NSS_JPAKE_SIGNERID
+  * Output key type: CKK_NSS_JPAKE_ROUND1
+  * Output key class: CKO_PRIVATE_KEY
+  * Parameter type: CK_NSS_JPAKERound1Params
+  *
+@@ -337,16 +343,82 @@ typedef struct CK_NSS_HKDFParams {
+     CK_BYTE_PTR pSalt;
+     CK_ULONG ulSaltLen;
+     CK_BBOOL bExpand;
+     CK_BYTE_PTR pInfo;
+     CK_ULONG ulInfoLen;
+ } CK_NSS_HKDFParams;
+ 
+ /*
++ * CK_NSS_IKE_PRF_PLUS_PARAMS is a structure that provides the parameters to
++ * the CKM_NSS_IKE_PRF_PLUS_DERIVE mechanism.
++ * The fields of the structure have the following meanings:
++ *      prfMechanism    underlying MAC mechanism used to generate the prf.
++ *      bHasSeedKey     hSeed key is present.
++ *      hSeedKey        optional seed from key
++ *      pSeedData       optional seed from data.
++ *      ulSeedDataLen   length of optional seed data.
++ *        If no seed data is present this value is NULL.
++ */
++typedef struct CK_NSS_IKE_PRF_PLUS_DERIVE_PARAMS {
++    CK_MECHANISM_TYPE prfMechanism;
++    CK_BBOOL bHasSeedKey;
++    CK_OBJECT_HANDLE hSeedKey;
++    CK_BYTE_PTR pSeedData;
++    CK_ULONG ulSeedDataLen;
++} CK_NSS_IKE_PRF_PLUS_DERIVE_PARAMS;
++
++/* CK_NSS_IKE_PRF_DERIVE_PARAMS is a structure that provides the parameters to
++ *  the CKM_NSS_IKE_PRF_DERIVE mechanism.
++ *
++ * The fields of the structure have the following meanings:
++ *     prfMechanism underlying MAC mechanism used to generate the prf.
++ *     bRekey       hNewKey is present.
++ *     pNi          Ni value
++ *     ulNiLen      length of Ni
++ *     pNr          Nr value
++ *     ulNrLen      length of Nr
++ *     hNewKey      New key value to drive the rekey.
++ */
++typedef struct CK_NSS_IKE_PRF_DERIVE_PARAMS {
++    CK_MECHANISM_TYPE prfMechanism;
++    CK_BBOOL bDataAsKey;
++    CK_BBOOL bRekey;
++    CK_BYTE_PTR pNi;
++    CK_ULONG ulNiLen;
++    CK_BYTE_PTR pNr;
++    CK_ULONG ulNrLen;
++    CK_OBJECT_HANDLE hNewKey;
++} CK_NSS_IKE_PRF_DERIVE_PARAMS;
++
++/* CK_NSS_IKE1_PRF_DERIVE_PARAMS is a structure that provides the parameters
++ * to the CKM_NSS_IKE_PRF_DERIVE mechanism.
++ *
++ * The fields of the structure have the following meanings:
++ *     prfMechanism  underlying MAC mechanism used to generate the prf.
++ *     bRekey        hNewKey is present.
++ *     pCKYi         CKYi value
++ *     ulCKYiLen     length of CKYi
++ *     pCKYr         CKYr value
++ *     ulCKYrLen     length of CKYr
++ *     hNewKey       New key value to drive the rekey.
++ */
++typedef struct CK_NSS_IKE1_PRF_DERIVE_PARAMS {
++    CK_MECHANISM_TYPE prfMechanism;
++    CK_BBOOL bHasPrevKey;
++    CK_OBJECT_HANDLE hKeygxy;
++    CK_OBJECT_HANDLE hPrevKey;
++    CK_BYTE_PTR pCKYi;
++    CK_ULONG ulCKYiLen;
++    CK_BYTE_PTR pCKYr;
++    CK_ULONG ulCKYrLen;
++    CK_BYTE keyNumber;
++} CK_NSS_IKE1_PRF_DERIVE_PARAMS;
++
++/*
+  * Parameter for the TLS extended master secret key derivation mechanisms:
+  *
+  *  * CKM_NSS_TLS_EXTENDED_MASTER_KEY_DERIVE
+  *  * CKM_NSS_TLS_EXTENDED_MASTER_KEY_DERIVE_DH
+  *
+  * For the TLS 1.2 PRF, the prfHashMechanism parameter determines the hash
+  * function used. For earlier versions of the PRF, set the prfHashMechanism
+  * value to CKM_TLS_PRF.
+diff --git a/lib/util/pkcs11t.h b/lib/util/pkcs11t.h
+--- a/lib/util/pkcs11t.h
++++ b/lib/util/pkcs11t.h
+@@ -877,16 +877,18 @@ typedef CK_ULONG CK_MECHANISM_TYPE;
+ #define CKM_AES_MAC_GENERAL 0x00001084
+ #define CKM_AES_CBC_PAD 0x00001085
+ /* new for v2.20 amendment 3 */
+ #define CKM_AES_CTR 0x00001086
+ /* new for v2.30 */
+ #define CKM_AES_GCM 0x00001087
+ #define CKM_AES_CCM 0x00001088
+ #define CKM_AES_CTS 0x00001089
++#define CKM_AES_XCBC_MAC 0x0000108C
++#define CKM_AES_XCBC_MAC_96 0x0000108D
+ 
+ /* BlowFish and TwoFish are new for v2.20 */
+ #define CKM_BLOWFISH_KEY_GEN 0x00001090
+ #define CKM_BLOWFISH_CBC 0x00001091
+ #define CKM_TWOFISH_KEY_GEN 0x00001092
+ #define CKM_TWOFISH_CBC 0x00001093
+ 
+ /* Camellia is proposed for v2.20 Amendment 3 */
