@@ -5,7 +5,7 @@
 Summary:          Network Security Services Utilities Library
 Name:             nss-util
 Version:          3.36.0
-Release:          1.1%{?dist}
+Release:          1%{?dist}
 License:          MPLv2.0
 URL:              http://www.mozilla.org/projects/security/pki/nss/
 Group:            System Environment/Libraries
@@ -42,8 +42,6 @@ Patch8: nss-util-3.19.1-tls12-mechanisms.patch
 # To revert the change in:
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1377940
 Patch9: nss-util-sql-default.patch
-# revert when rebase to 3.40
-Patch10: nss-util-3.36-ipsec_cert_vfy.patch
 
 %description
 Utilities for Network Security Services and the Softoken module
@@ -69,7 +67,6 @@ Header and library files for doing development with Network Security Services.
 %patch8 -p1 -b .tls12_mechs
 pushd nss
 %patch9 -p1 -R -b .sql-default
-%patch10 -p1 -b .ipsec_vfy
 popd
 
 
@@ -243,9 +240,6 @@ done
 %{_includedir}/nss3/templates/templates.c
 
 %changelog
-* Mon Nov 12 2018 Bob Relyea <rrelyea@redhat.com> - 3.36.0-1.1
-- Update the cert verify code to allow a new ipsec usage and follow RFC 4945
-
 * Mon Mar  5 2018 Daiki Ueno <dueno@redhat.com> - 3.36.0-1
 - Rebase to NSS 3.36
 
